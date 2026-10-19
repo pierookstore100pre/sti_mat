@@ -1,8 +1,14 @@
 import { Router } from "express";
-import { listarEstudiantes } from "../controllers/estudiantes.controller.js";
+import {
+  listarEstudiantes,
+  obtenerEstudiante,
+  registrarEstudiante
+} from "../controllers/estudiantes.controller.js";
 
 const router = Router();
 
 router.get("/", listarEstudiantes);
+router.get("/:id", obtenerEstudiante);
+router.post("/", registrarEstudiante);
 
 export default router;
