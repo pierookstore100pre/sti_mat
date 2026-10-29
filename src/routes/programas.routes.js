@@ -4,6 +4,7 @@ import { listarProgramas,
         registrarPrograma, 
         actualizarPrograma, 
         actualizarParcialPrograma,
+        listarUnidadesPorPrograma,
         eliminarPrograma
         } from "../controllers/programas.controller.js";
 
@@ -13,6 +14,9 @@ router.get("/", listarProgramas);
 router.get("/:id", obtenerPrograma);
 router.put("/:id", actualizarPrograma);
 router.patch("/:id", actualizarParcialPrograma);
+router.get("/unidades/:id", listarUnidadesPorPrograma);
 router.post("/", registrarPrograma);
 router.delete("/:id", eliminarPrograma);
 export default router;
+
+
