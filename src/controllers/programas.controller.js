@@ -73,27 +73,75 @@ export const listarProgramas = async (req, res) => {
 //agregamos la funcion obtenerPrograma para obtener un programa por su id
 
 export const obtenerPrograma = async (req, res) => {
-  const id = Number(req.params.id);
-
-  if (!Number.isSafeInteger(id) || id <= 0) {
-    return res.status(400).json({ mensaje: "ID inválido" });
-  }
-
-  try {
-    const [filas] = await pool.execute(
-      "SELECT id, codigo, nombre_actual, activo FROM sti_programas_estudios WHERE id = ?",
-      [id]
-    );
-
-    if (filas.length === 0) {
-      return res.status(404).json({ mensaje: "Programa no encontrado" });
+    const id = Number(req.params.id);
+    if (!Number.isSafeInteger(id) || id <= 0) {
+        return res.status(400).json({ mensaje: "ID inválido" });
     }
 
-    return res.status(200).json(filas[0]);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ mensaje: "Error interno del servidor" });
-  }
+    const { incluir } = req.query;
+    if (incluir !== undefined && incluir !== "planes") {
+        return res.status(400).json({ mensaje: "incluir solo admite el valor: planes" });
+    }
+
+    try {
+        const [filas] = await pool.execute(
+            "SELECT id, codigo, nombre_actual, activo FROM sti_programas_estudios WHERE id = ?",
+            [id]
+        );
+        if (filas.length === 0) {
+            return res.status(404).json({ mensaje: "Programa no encontrado" });
+        }
+
+        const programa = filas[0];
+
+        if (incluir === "planes") {
+            const [detalle] = await pool.execute(
+                `SELECT pl.id AS plan_id, pl.codigo AS plan_codigo, pl.ano_plan, pl.estado,
+                        u.codigo AS unidad_codigo, u.nombre AS unidad_nombre, c.nombre AS ciclo, pu.creditos
+                 FROM sti_planes_estudios pl
+                 LEFT JOIN sti_plan_unidades pu ON pu.plan_id = pl.id
+                 LEFT JOIN sti_unidades_didacticas u ON u.id = pu.unidad_id
+                 LEFT JOIN sti_ciclos c ON c.id = pu.ciclo_id
+                 WHERE pl.programa_id = ?
+                 ORDER BY pl.ano_plan DESC, pu.ciclo_id, u.nombre`,
+                [id]
+            );
+
+            const planes = [];
+            for (const fila of detalle) {
+                // Buscar si el plan ya existe en el arreglo
+                let plan = planes.find((p) => p.id === fila.plan_id);
+                
+                // Si no existe, crearlo
+                if (!plan) {
+                    plan = {
+                        id: fila.plan_id,
+                        codigo: fila.plan_codigo,
+                        ano_plan: fila.ano_plan,
+                        estado: fila.estado,
+                        unidades: []
+                    };
+                    planes.push(plan);
+                }
+
+                // Agregar la unidad si no es NULL (por el LEFT JOIN)
+                if (fila.unidad_codigo != null) {
+                    plan.unidades.push({
+                        codigo: fila.unidad_codigo,
+                        nombre: fila.unidad_nombre,
+                        ciclo: fila.ciclo,
+                        creditos: Number(fila.creditos) // MySQL devuelve DECIMAL como texto
+                    });
+                }
+            }
+            programa.planes = planes;
+        }
+
+        return res.status(200).json(programa);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ mensaje: "Error interno del servidor" });
+    }
 };
 
 //agregamos la funcion registrarPrograma para registrar un nuevo programa

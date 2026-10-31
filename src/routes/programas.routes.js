@@ -14,7 +14,7 @@ router.get("/", listarProgramas);
 router.get("/:id", obtenerPrograma);
 router.put("/:id", actualizarPrograma);
 router.patch("/:id", actualizarParcialPrograma);
-router.get("/unidades/:id", listarUnidadesPorPrograma);
+router.get("/:id/unidades", listarUnidadesPorPrograma);
 router.post("/", registrarPrograma);
 router.delete("/:id", eliminarPrograma);
 export default router;
