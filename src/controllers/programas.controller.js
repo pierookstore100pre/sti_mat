@@ -96,14 +96,14 @@ export const obtenerPrograma = async (req, res) => {
 
         if (incluir === "planes") {
             const [detalle] = await pool.execute(
-                `SELECT pl.id AS plan_id, pl.codigo AS plan_codigo, pl.ano_plan, pl.estado,
+                `SELECT pl.id AS plan_id, pl.codigo AS plan_codigo, pl.anio_plan, pl.estado,
                         u.codigo AS unidad_codigo, u.nombre AS unidad_nombre, c.nombre AS ciclo, pu.creditos
                  FROM sti_planes_estudios pl
                  LEFT JOIN sti_plan_unidades pu ON pu.plan_id = pl.id
                  LEFT JOIN sti_unidades_didacticas u ON u.id = pu.unidad_id
                  LEFT JOIN sti_ciclos c ON c.id = pu.ciclo_id
                  WHERE pl.programa_id = ?
-                 ORDER BY pl.ano_plan DESC, pu.ciclo_id, u.nombre`,
+                 ORDER BY pl.anio_plan DESC, pu.ciclo_id, u.nombre`,
                 [id]
             );
 
